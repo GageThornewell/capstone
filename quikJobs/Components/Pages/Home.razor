@@ -1,0 +1,53 @@
+﻿@page "/"
+@using Services
+@using quikJobs.Data
+@using Microsoft.AspNetCore.Identity
+
+@inject JobService _JobService
+@inject SavedJobService _SavedJobService
+@inject AuthenticationStateProvider _authenticationStateProvider
+@rendermode InteractiveServer
+
+<PageTitle>Home</PageTitle>
+
+<div class="container d-flex justify-content-center m-5">
+    <div class="row job-cards justify-content-center">
+        @if (jobs != null && jobs.Count > 0)
+        {
+            @foreach (var job in jobs)
+            {
+                <div class="col-12 col-md-6 col-lg-4 mb-4 d-flex justify-content-center">
+                    <JobCard Job="@job" /> <!-- Pass each job to the JobCard component -->
+                </div>
+            }
+        }
+        else
+        {
+            <p>No Jobs Available</p>
+        }
+    </div>
+</div>
+
+
+
+
+@code {
+    private List<Job> jobs = new List<Job>(); // List to hold the jobs
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            jobs = await _JobService.GetRandomJobsAsync(); // Fetch all jobs
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        
+    }
+
+
+
+    
+}

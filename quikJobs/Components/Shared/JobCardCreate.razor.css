@@ -1,0 +1,66 @@
+﻿    .job-card {
+        background-color: black;
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 400px;
+        margin: auto;
+        box-sizing: border-box; /* Ensure padding doesn't overflow */
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Add shadow to mimic card-like appearance */
+        margin-bottom: 100px;
+    }
+
+    .job-card .basic-job-card {
+        padding-bottom: 20px;
+    }
+
+    .job-card h4 {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+    }
+
+    .job-card label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .job-card .form-control {
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0 15px 0;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        background-color: #333; /* Dark background for inputs */
+        color: white; /* Text color */
+    }
+
+    .job-card .form-control:focus {
+        border-color: #4CAF50; /* Green border on focus */
+        outline: none;
+    }
+
+    .job-card .save-job-btn {
+        background-color: #000;
+        border: none;
+        color: #fff;
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1.25rem;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .job-card .save-job-btn:hover {
+        background-color: #777;
+    }
+
+    .d-flex {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .views {
+        text-align: left;
+    }

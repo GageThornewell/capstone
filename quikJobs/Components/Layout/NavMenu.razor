@@ -1,0 +1,120 @@
+﻿@implements IDisposable
+@using quikJobs.Data
+@using Microsoft.AspNetCore.Identity
+
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+
+@using System.Security.Claims
+
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-2">
+    <div class="container-fluid">
+        <!-- Left-aligned Kwic Jobs link -->
+        <a class="navbar-brand" href="">Kwic Jobs</a>
+
+        <AuthorizeView>
+            <Authorized>                      
+                <span class="navbar-text">Hello, @FirstName!</span>   
+            </Authorized>
+        </AuthorizeView>
+
+        <!-- Toggle button for mobile view -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Right-aligned navigation links -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+
+                <AuthorizeView Roles="Admin">
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="admin">Admin</NavLink>
+                </li>
+                </AuthorizeView>
+               
+
+                <!-- Use ms-auto for right-alignment -->
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="jobfeed">JobFeed</NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="savedjobs">SavedJobs</NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="createjobs">CreateJob</NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="myjobs">MyJobs</NavLink>
+                </li>
+
+                <AuthorizeView>
+                    <Authorized>
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="Account/Manage">Settings</NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <form action="Account/Logout" method="post" class="d-inline">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                                <button type="submit" class="nav-link btn btn-link">Logout</button>
+                            </form>
+                        </li>
+                    </Authorized>
+                    <NotAuthorized>
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="Account/Register">Register</NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="Account/Login">Login</NavLink>
+                        </li>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </ul>
+        </div>
+    </div>
+
+
+</nav>
+
+@code {
+    private string? currentUrl;
+    private string? FirstName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        // Check if the user is authenticated and get their name
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var dbuser = await UserManager.GetUserAsync(user);
+            if (FirstName != "")
+            {
+                FirstName = dbuser.FirstName; // Gets the user's name
+            }
+            else
+                FirstName = "User";
+
+        }
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

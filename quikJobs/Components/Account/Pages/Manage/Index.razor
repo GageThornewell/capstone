@@ -1,0 +1,160 @@
+﻿@page "/Account/Manage"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using quikJobs.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Profile</PageTitle>
+
+
+<StatusMessage />
+
+<div class="container-custom">
+    
+    <div>
+        <h3>Profile</h3>
+        <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="form-floating mb-3">
+                <input type="text" value="@username" class="form-control" placeholder="Please choose your username." disabled />
+                <label for="username" class="form-label">Username</label>
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.FirstName" class="form-control" placeholder="Please enter your first name" />
+                <label for="first-name" class="form-label">First Name</label>
+                <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.LastName" class="form-control" placeholder="Please enter your last name" />
+                <label for="last-name" class="form-label">Last Name</label>
+                <ValidationMessage For="() => Input.LastName" class="text-danger" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Address" class="form-control" placeholder="Please enter your address." />
+                <label for="address" class="form-label">Address</label>
+                <ValidationMessage For="() => Input.Address" class="text-danger" />
+            </div>
+            
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
+                <label for="phone-number" class="form-label">Phone Number</label>
+                <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
+            </div>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private ApplicationUser user = default!;
+    private string? username;
+    private string? phoneNumber;
+    private string? address;
+    private string? firstName;
+    private string? lastName;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        username = await UserManager.GetUserNameAsync(user);
+
+        // Initialize Input Model
+        Input = new InputModel
+            {
+                PhoneNumber = await UserManager.GetPhoneNumberAsync(user),
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Address = user.Address
+            };
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        bool isUpdated = false;
+
+        // Check if phone number has changed
+        if (Input.PhoneNumber != phoneNumber)
+        {
+            user.PhoneNumber = Input.PhoneNumber;
+            isUpdated = true;
+        }
+
+        // Check if first name has changed
+        if (Input.FirstName != firstName && !string.IsNullOrEmpty(Input.FirstName))
+        {
+            user.FirstName = Input.FirstName;
+            isUpdated = true;
+        }
+
+        // Check if last name has changed
+        if (Input.LastName != lastName && !string.IsNullOrEmpty(Input.LastName))
+        {
+            user.LastName = Input.LastName;
+            isUpdated = true;
+        }
+
+        // Check if address has changed
+        if (Input.Address != address && !string.IsNullOrEmpty(Input.Address))
+        {
+            user.Address = Input.Address;
+            isUpdated = true;
+        }
+
+        // If any fields were updated, save the changes
+        if (isUpdated)
+        {
+            var updateResult = await UserManager.UpdateAsync(user);
+
+            if (updateResult.Succeeded)
+            {
+                // Refresh the sign-in session
+                await SignInManager.RefreshSignInAsync(user);
+                RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+            }
+            else
+            {
+                RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to update profile.", HttpContext);
+                
+            }
+        }
+        else
+        {
+            // No changes were made, redirect with a message
+            RedirectManager.RedirectToCurrentPageWithStatus("Error: No Changes were made", HttpContext);
+        }
+    }
+
+
+
+    private sealed class InputModel
+    {
+        [Phone]
+        [Display(Name = "Phone Number")]
+        public string? PhoneNumber { get; set; }
+
+        [Display(Name = "First Name")]
+        public string? FirstName { get; set; }
+
+        [Display(Name = "Last Name")]
+        public string? LastName { get; set; }
+
+        [Display(Name = "Address")]
+        public string? Address { get; set; }
+    }
+}

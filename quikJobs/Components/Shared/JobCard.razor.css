@@ -1,0 +1,53 @@
+﻿.job-card {
+    background-color: black;
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 400px;
+    margin: auto;
+}
+
+.job-card p {
+    margin: 5px 0;
+    text-align: left;
+}
+
+.job-card ul {
+    list-style-type: none;
+    padding: 0;
+    text-align: left;
+    margin: 15px 0;
+}
+
+.job-card ul li {
+    margin: 5px 0;
+    text-align: left;
+    }
+
+.job-card .job-card-img {
+    width: 100%;
+    border-radius: 5px;
+}
+
+.job-card .save-job-btn {
+    background-color: #000; /* Black background */
+    border: none; /* Remove border */
+    color: #fff; /* White icon */
+    padding: 8px 12px; /* Padding for button size */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Make it clickable */
+    font-size: 1.25rem; /* Increase icon size */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transitions */
+}
+
+.job-card .save-job-btn:hover {
+    background-color: #777;
+}
+
+.d-flex {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+

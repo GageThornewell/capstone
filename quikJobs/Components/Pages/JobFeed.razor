@@ -1,0 +1,43 @@
+﻿@page "/jobfeed"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@using quikJobs.Data
+
+@inject quikJobs.Services.JobService JobService
+
+<PageTitle>JobFeed</PageTitle>
+
+<div class="container mb-5">
+    <h3 class="text-center">Job Feed</h3>
+
+    @if (jobs == null)
+    {
+        <p class="text-center">Loading jobs...</p>
+    }
+    else if (jobs.Count == 0)
+    {
+        <p class="text-center">No jobs available.</p>
+    }
+    else
+    {
+        <div class="row justify-content-center m-3">
+            @foreach (var job in jobs)
+            {
+                <div class="col-12 col-md-8 mb-4">
+                    <div class="d-flex justify-content-center">
+                        <JobCard Job="@job" showMore=true/>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<Job>? jobs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        jobs = await JobService.GetAllJobsAsync();
+    }
+}

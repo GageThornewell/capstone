@@ -1,0 +1,165 @@
+﻿@using quikJobs.Data
+@using Microsoft.AspNetCore.Identity
+@using Services
+
+@inject NavigationManager Navigation
+@inject JobService JobService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+@rendermode InteractiveServer
+
+<!-- Success Alert -->
+@if (isJobCreated)
+{
+    <div class="alert alert-success mt-3">
+        Job created successfully!
+    </div>
+}
+<EditForm Model="@newJob" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="job-card">
+        <div class="basic-job-card">
+            <!-- Input for Job Name -->
+            <label for="name">Job Name</label>
+            <InputText id="name" @bind-Value="newJob.Name" class="form-control mb-1" placeholder="Please type the job name" />
+
+            <!-- Input for Job URL -->
+            <label for="url">Select an Image</label>
+            <InputText id="url" @bind-Value="newJob.Url" class="form-control mb-3" placeholder="Please enter an image URL" />
+
+            <!-- Display image based on current URL -->
+            <div>
+                <img src="@newJob.Url" alt="Job Image" class="job-card-img" />
+            </div>
+
+            <p class="views mt-1">Posted @GetFormattedDate(newJob.CreatedOn)</p>
+            <p class="views">Views: 0</p>
+        </div>
+
+        <div>
+            <label for="type">Type:</label>
+            <InputSelect id="type" @bind-Value="newJob.Type" class="form-control">
+                <option value="P">P (Part-time)</option>
+                <option value="F">F (Full-time)</option>
+                <option value="C">C (Contract)</option>
+            </InputSelect>
+        </div>
+
+        <div>
+            <label for="description">Description:</label>
+            <InputTextArea id="description" @bind-Value="newJob.Description" class="form-control" placeholder="Please provide a job description" />
+        </div>
+
+        <div>
+            <label for="pay">Pay:</label>
+            <InputNumber id="pay" @bind-Value="newJob.Pay" class="form-control" placeholder="Enter the pay for the job" />
+        </div>
+
+        @if (JobToEdit != null)
+        {
+            <div class="d-flex gap-3 mt-3">
+                <!-- Submit will call handle submit-->
+                <button type="submit" class="save-job-btn">Edit</button>
+                <button type="button" class="save-job-btn" @onclick="DeleteByIdAsync">Delete</button>
+            </div>
+        }
+
+        else
+        {
+            <div class="d-flex gap-3 mt-3">
+                <!-- Submit will call handle submit-->
+                <button type="submit" class="save-job-btn">Save Job</button>
+                <button type="button" class="save-job-btn" @onclick="ResetForm">Reset</button>
+            </div>
+        }
+        
+    </div>
+</EditForm>
+
+@code {
+    [Parameter] public Job? JobToEdit { get; set; }
+    private Job newJob;
+
+    private ApplicationUser? currentUser;
+    private bool isJobCreated = false; // Flag to track job creation success
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (JobToEdit != null)
+        {
+            newJob = JobToEdit; // If there's a job to edit, initialize with it
+        }
+        else
+        {
+            newJob = new Job(); // Otherwise, initialize with a new job
+            newJob.CreatedOn = DateOnly.FromDateTime(DateTime.Now);
+            newJob.Views = 0;
+            newJob.Url = "images/software_developer.jfif"; 
+        }
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated ?? false)
+        {
+            var userId = user.FindFirst(c => c.Type == "sub" || c.Type.Contains("nameidentifier"))?.Value;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                currentUser = await UserManager.FindByIdAsync(userId);
+
+                if (currentUser != null)
+                {
+                    Console.WriteLine($"User Found: {currentUser.FirstName} {currentUser.LastName}");
+                    newJob.UserId = currentUser.Id;
+                }
+            }
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (newJob.JobId == 0)
+        {
+            // Save as new job
+            await JobService.SaveJobAsync(newJob);
+            isJobCreated = true;
+            ResetForm(); // Clears the form fields
+        }
+        else
+        {
+            // Update existing job
+            await JobService.EditJobAsync(newJob);
+        }
+
+
+    }
+
+    private async Task DeleteByIdAsync()
+    {
+        var status = await JobService.DeleteJobByIdAsync(JobToEdit.JobId);
+        if(!status)
+        {
+            Console.WriteLine("Deleted");
+        }
+    }
+
+    private void ResetForm()
+    {
+        newJob = new Job();
+    }
+
+    private string GetFormattedDate(DateOnly? postedDate)
+    {
+        if (postedDate == null) return "Unknown Date";
+
+        var dateTime = postedDate.Value.ToDateTime(new TimeOnly(0, 0));
+        return dateTime.ToString("MMM d");
+    }
+
+    
+}
+

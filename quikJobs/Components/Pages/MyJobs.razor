@@ -1,0 +1,62 @@
+﻿@page "/myjobs"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using quikJobs.Data
+
+@inject quikJobs.Services.JobService _JobService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>MyJobs</PageTitle>
+
+
+<h3 class="text-center">My Jobs</h3>
+
+
+
+<div class="container mb-5">
+    @if (jobs == null)
+    {
+        <p class="text-center">Loading my jobs...</p>
+        <p>If this does not load in 5 seconds please click <NavLink class="nav-link" href="myjobs">Here</NavLink></p>
+    }
+    else if (jobs.Count == 0)
+    {
+        <p class="text-center">You have no jobs.</p>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var job in jobs)
+            {
+                <div class="col-12 col-md-6 mb-4">
+                    <!-- 2 items per row on medium screens and up -->
+                    <div class="job-card">
+                        <JobCardCreate JobToEdit="@job" />
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+
+
+
+
+@code {
+    private List<Job>? jobs;
+
+    private string? userId = "null";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+        jobs = await _JobService.GetJobsByUserIdAsync(userId);
+        
+    }
+}

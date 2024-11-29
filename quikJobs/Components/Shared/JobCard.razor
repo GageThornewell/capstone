@@ -1,0 +1,157 @@
+﻿@using Services
+@using quikJobs.Data
+@using Microsoft.AspNetCore.Identity
+
+@inject JobService _JobService
+@inject SavedJobService _SavedJobService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+@rendermode InteractiveServer
+
+
+<div class="job-card">
+    <div class="basic-job-card">
+        <h4>@job.Name</h4>
+        <p>Posted @GetTimeAgo(job.CreatedOn)</p>
+        <img src="@job.Url" alt="@job.Name" class="job-card-img" />
+        <p class="views">Views: @job.Views</p>
+    </div>
+
+        @if (full)
+        {
+            <div class="description">
+                <p>@job.Description</p>
+            </div>
+            <div class="job-details">
+                <ul>
+                    <li><strong>Pay:</strong> @job.Pay</li>
+                    <li><strong>Job Type:</strong> @ConvertTypeToString(@job.Type)</li>
+                </ul>
+            </div>
+        }
+
+        @if (IsUserSignedIn && showMore)
+        {
+            <div class="d-flex gap-5">
+                <button class="save-job-btn">
+                    <i class="bi bi-box-arrow-down" @onclick="SaveJobAsync"></i>
+                </button>
+                <button class="save-job-btn">
+                    <i class="bi bi-eyeglasses" @onclick="ShowCardDetails"></i>
+                </button>
+                <button class="save-job-btn">
+                    <i class="bi bi-chat-left-dots-fill"></i>
+                </button>
+            </div>
+        }
+
+
+
+        else if (IsUserSignedIn)
+        {
+            <button class="save-job-btn"><i class="bi bi-box-arrow-down" @onclick="SaveJobAsync"></i></button>
+        }
+    
+
+
+</div>
+
+
+
+
+    
+
+
+@code {
+    [Parameter] 
+    public Job job { get; set; } // Receive the Job object as a parameter
+
+    [Parameter]
+    public bool showMore { get; set; }
+
+
+
+    private string? userId = "null";
+
+    private bool IsUserSignedIn { get; set; }
+
+    private bool full { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+        IsUserSignedIn = authState?.User.Identity.IsAuthenticated ?? false;
+
+        //Set full to falso we dont initially show any details
+        full = false;
+
+    }
+
+    private async Task SaveJobAsync()
+    {
+
+        //Create the savedJob
+        SavedJob savedJob = new SavedJob
+        {
+            UserId = userId,
+            JobId = job.JobId,
+            SaveDate = DateOnly.FromDateTime(DateTime.Now),
+            Job = job
+
+        };
+
+        //Use the service to save the job
+        await _SavedJobService.SaveJobAsync(savedJob);
+
+
+    }
+
+    private void ShowCardDetails()
+    {
+        full = !full;
+    }
+
+    private String ConvertTypeToString(string p)
+    {
+        if(p.Equals("F"))
+        {
+            return "Full-Time";
+        }
+        else if (p.Equals("P"))
+        {
+            return "Part-Time";
+        }
+        else if (p.Equals("C"))
+        {
+            return "Contract";
+        }
+        else
+        {
+            return "No-Type";
+        }
+    }
+
+  
+
+    private string GetTimeAgo(DateOnly? postedTime)
+    {
+        if (postedTime == null) return "unknown time";
+
+        // Convert DateOnly to DateTime
+        var postedDateTime = postedTime.Value.ToDateTime(new TimeOnly(0, 0)); // Midnight of the posted date
+
+        var timeSpan = DateTime.Now - postedDateTime;
+
+        if (timeSpan.TotalMinutes < 1)
+            return "just now";
+        if (timeSpan.TotalMinutes < 60)
+            return $"{(int)timeSpan.TotalMinutes} minute{((int)timeSpan.TotalMinutes > 1 ? "s" : "")} ago";
+        if (timeSpan.TotalHours < 24)
+            return $"{(int)timeSpan.TotalHours} hour{((int)timeSpan.TotalHours > 1 ? "s" : "")} ago";
+
+        return $"{(int)timeSpan.TotalDays} day{((int)timeSpan.TotalDays > 1 ? "s" : "")} ago";
+    }
+}

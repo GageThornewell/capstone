@@ -1,0 +1,57 @@
+﻿@page "/admin"
+@attribute [Authorize(Roles = "Admin")]
+
+@using Microsoft.AspNetCore.Identity
+@using quikJobs.Data
+@inject UserService UserService
+
+
+@rendermode InteractiveServer
+
+
+<PageTitle>Admin</PageTitle>
+
+<h1>Admin - User Management</h1>
+
+@if (users == null)
+{
+    <p>Loading users...</p>
+}
+else if (users.Count == 0)
+{
+    <p>No users found in the system.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in users)
+            {
+                <tr>
+                    <td>@user.Id</td>
+                    <td>@user.UserName</td>
+                    <td>@user.Email</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ApplicationUser>? users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Fetch users asynchronously using DbContext
+        users = await UserService.GetUsersAsync();
+    }
+}

@@ -1,0 +1,21 @@
+﻿.footer {
+    background-color: #333;
+    color: #fff;
+    padding: 10px 0;
+    position: fixed;
+    bottom: 0;
+    left: 0; /* Ensure the footer starts from the left edge */
+    width: 100%; /* Ensures the footer stretches the full width of the page */
+}
+
+.footer-container {
+    display: flex;
+    justify-content: flex-start;
+    padding: 0 20px;
+    width: 100%; /* Make sure the container also stretches */
+}
+
+.footer-left p {
+    margin: 0;
+    font-size: 14px;
+}
