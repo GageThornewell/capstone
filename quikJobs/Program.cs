@@ -24,7 +24,8 @@ builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuth
 //My custom services
 builder.Services.AddScoped<JobService>();
 builder.Services.AddScoped<SavedJobService>();
-builder.Services.AddScoped<UserService>();
+
+
 
 
 
@@ -37,12 +38,12 @@ builder.Services.AddAuthentication(options =>
     .AddIdentityCookies();
 
 
-var connectionString = builder.Configuration.GetConnectionString("AzureConnectionString") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("KwicJobsConnectionString") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 // Register KwicJobsContext
-var kwicJobsConnectionString = builder.Configuration.GetConnectionString("AzureConnectionString")
+var kwicJobsConnectionString = builder.Configuration.GetConnectionString("KwicJobsConnectionString")
                               ?? throw new InvalidOperationException("Connection string 'KwicJobsConnectionString' not found.");
 
 builder.Services.AddDbContext<KwicJobsContext>(options =>

@@ -18,11 +18,22 @@
     @if (jobs == null)
     {
         <p class="text-center">Loading my jobs...</p>
-        <p>If this does not load in 5 seconds please click <NavLink class="nav-link" href="myjobs">Here</NavLink></p>
+        <p>If this does not load in 5 seconds please reload the page</p>
     }
     else if (jobs.Count == 0)
     {
         <p class="text-center">You have no jobs.</p>
+    }
+    else if (jobs.Count == 1)
+    {
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-6">
+                <!-- Single job, centered -->
+                <div class="job-card">
+                    <JobCardEdit newJob="@jobs[0]" />
+                </div>
+            </div>
+        </div>
     }
     else
     {
@@ -32,7 +43,7 @@
                 <div class="col-12 col-md-6 mb-4">
                     <!-- 2 items per row on medium screens and up -->
                     <div class="job-card">
-                        <JobCardCreate JobToEdit="@job" />
+                        <JobCardEdit newJob="@job" />
                     </div>
                 </div>
             }

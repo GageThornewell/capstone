@@ -55,26 +55,31 @@ public class JobService
     /// <summary>
     /// Deletes a job by its JobId.
     /// </summary>
-    /// <param name="jobId">The JobId of the job to delete.</param>
-    /// <returns>True if successful; false otherwise.</returns>
-    public async Task<bool> DeleteJobByIdAsync(int jobId)
+    /// <param name="jobId">The ID of the job to be deleted.</param>
+    /// <returns>True if the deletion was successful; false otherwise.</returns>
+    public async Task<bool> DeleteJobAsync(int jobId)
     {
         try
         {
-            var job = await GetJobByIdAsync(jobId);
-            if (job == null)
+            var jobToDelete = await GetJobByIdAsync(jobId);
+            if (jobToDelete == null)
+            {
                 return false; // Job not found
+            }
 
-            _context.Jobs.Remove(job);
+            _context.Jobs.Remove(jobToDelete);
             await _context.SaveChangesAsync();
-            return true;
+            return true; // Successfully deleted
         }
         catch
         {
             // Log the exception or handle it as necessary
-            return false;
+            return false; // Deletion failed
         }
     }
+
+
+
 
     /// <summary>
     /// Updates an existing job based on its JobId.

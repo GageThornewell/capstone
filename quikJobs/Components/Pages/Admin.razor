@@ -3,15 +3,14 @@
 
 @using Microsoft.AspNetCore.Identity
 @using quikJobs.Data
-@inject UserService UserService
 
+@inject UserManager<ApplicationUser> UserManager;
 
 @rendermode InteractiveServer
 
-
 <PageTitle>Admin</PageTitle>
 
-<h1>Admin - User Management</h1>
+<h1>Admin</h1>
 
 @if (users == null)
 {
@@ -29,8 +28,6 @@ else
                 <th>User ID</th>
                 <th>Username</th>
                 <th>Email</th>
-                <th>Role</th>
-                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -49,9 +46,12 @@ else
 @code {
     private List<ApplicationUser>? users;
 
+
+
     protected override async Task OnInitializedAsync()
     {
-        // Fetch users asynchronously using DbContext
-        users = await UserService.GetUsersAsync();
-    }
+        // Fetch all users using UserManager
+        var allUsers = UserManager.Users; // This returns an IQueryable<ApplicationUser>
+        users = allUsers.ToList();
+    } 
 }

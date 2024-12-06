@@ -28,6 +28,35 @@ public class SavedJobService
         }
     }
 
+    // Add this method to your SavedJobService class
+    public async Task<bool> DeleteSavedJobAsync(SavedJob s)
+    {
+        try
+        {
+            // Find the saved job based on userId and jobId
+            var savedJob = await _context.SavedJobs
+                .FirstOrDefaultAsync(sj => sj.UserId == s.UserId && sj.JobId == s.JobId);
+
+            // If the saved job doesn't exist, return false
+            if (savedJob == null)
+                return false;
+
+            // Remove the saved job from the context
+            _context.SavedJobs.Remove(savedJob);
+
+            // Save changes to the database
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch
+        {
+            // Handle any errors that might occur
+            return false;
+        }
+    }
+
+
+
 
     // Get all jobs saved by a specific userId
     public async Task<List<Job>> GetJobsSavedByUserId(string userId)

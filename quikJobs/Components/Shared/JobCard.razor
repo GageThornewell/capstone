@@ -31,7 +31,25 @@
             </div>
         }
 
-        @if (IsUserSignedIn && showMore)
+
+        @if (savedJobVersion == true)
+        {
+        <div class="d-flex gap-5">
+            <button class="save-job-btn">
+                <i class="bi bi-trash" @onclick="DeleteJobAsync"></i>
+            </button>
+            <button class="save-job-btn">
+                <i class="bi bi-eyeglasses" @onclick="ShowCardDetails"></i>
+            </button>
+            <button class="save-job-btn">
+                <i class="bi bi-chat-left-dots-fill"></i>
+            </button>
+        </div>
+        }
+
+
+
+        else if (IsUserSignedIn && showMore)
         {
             <div class="d-flex gap-5">
                 <button class="save-job-btn">
@@ -70,6 +88,9 @@
     [Parameter]
     public bool showMore { get; set; }
 
+    [Parameter]
+    public bool savedJobVersion { get; set; }
+
 
 
     private string? userId = "null";
@@ -104,9 +125,29 @@
         };
 
         //Use the service to save the job
-        await _SavedJobService.SaveJobAsync(savedJob);
+        var success = await _SavedJobService.SaveJobAsync(savedJob);
+
+        if(success)
+        {
+            StateHasChanged();
+        } 
 
 
+    }
+
+    private async Task DeleteJobAsync()
+    {
+        //Create the savedJob
+        SavedJob savedJob = new SavedJob
+            {
+                UserId = userId,
+                JobId = job.JobId,
+                SaveDate = DateOnly.FromDateTime(DateTime.Now),
+                Job = job
+            };
+
+
+        await _SavedJobService.DeleteSavedJobAsync(savedJob);
     }
 
     private void ShowCardDetails()

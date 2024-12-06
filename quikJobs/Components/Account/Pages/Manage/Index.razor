@@ -15,7 +15,7 @@
 <StatusMessage />
 
 <div class="container-custom">
-    
+
     <div>
         <h3>Profile</h3>
         <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
@@ -43,7 +43,7 @@
                 <label for="address" class="form-label">Address</label>
                 <ValidationMessage For="() => Input.Address" class="text-danger" />
             </div>
-            
+
 
             <div class="form-floating mb-3">
                 <InputText @bind-Value="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
@@ -71,17 +71,19 @@
 
     protected override async Task OnInitializedAsync()
     {
-        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-        username = await UserManager.GetUserNameAsync(user);
+        //user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        user = await UserManager.GetUserAsync(HttpContext.User);
 
-        // Initialize Input Model
-        Input = new InputModel
-            {
-                PhoneNumber = await UserManager.GetPhoneNumberAsync(user),
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Address = user.Address
-            };
+        username = await UserManager.GetUserNameAsync(user);
+        phoneNumber = await UserManager.GetPhoneNumberAsync(user);
+        address = user.Address;
+        firstName = user.FirstName;
+        lastName = user.LastName;
+
+        Input.FirstName ??= firstName;
+        Input.LastName ??= lastName;
+        Input.Address ??= address;
+        Input.PhoneNumber ??= phoneNumber;
     }
 
     private async Task OnValidSubmitAsync()
@@ -130,7 +132,7 @@
             else
             {
                 RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to update profile.", HttpContext);
-                
+
             }
         }
         else

@@ -3,19 +3,13 @@
 @using Services
 
 @inject NavigationManager Navigation
-@inject JobService JobService
+@inject JobService _JobService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
 
 @rendermode InteractiveServer
 
-<!-- Success Alert -->
-@if (isJobCreated)
-{
-    <div class="alert alert-success mt-3">
-        Job created successfully!
-    </div>
-}
+
 <EditForm Model="@newJob" OnValidSubmit="HandleSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
@@ -58,75 +52,44 @@
             <InputNumber id="pay" @bind-Value="newJob.Pay" class="form-control" placeholder="Enter the pay for the job" />
         </div>
 
-        
+
             <div class="d-flex gap-3 mt-3">
                 <!-- Submit will call handle submit-->
-                <button type="submit" class="save-job-btn">Save Job</button>
-                <button type="button" class="save-job-btn" @onclick="ResetForm">Reset</button>
+                <button type="submit" class="save-job-btn">Edit</button>
+                <button type="button" class="save-job-btn" @onclick="DeleteJobAsync">Delete</button>
             </div>
         
-        
+
+
     </div>
 </EditForm>
 
 @code {
-    private Job newJob;
+    [Parameter]
+    public Job newJob { get; set; }
 
-    private ApplicationUser? currentUser;
-    private bool isJobCreated = false; // Flag to track job creation success
-
-    protected override async Task OnInitializedAsync()
-    {
-       
-            newJob = new Job(); // Otherwise, initialize with a new job
-            newJob.CreatedOn = DateOnly.FromDateTime(DateTime.Now);
-            newJob.Views = 0;
-            newJob.Url = "images/software_developer.jfif"; 
-        
-
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        if (user.Identity?.IsAuthenticated ?? false)
-        {
-            var userId = user.FindFirst(c => c.Type == "sub" || c.Type.Contains("nameidentifier"))?.Value;
-
-            if (!string.IsNullOrEmpty(userId))
-            {
-                currentUser = await UserManager.FindByIdAsync(userId);
-
-                if (currentUser != null)
-                {
-                    Console.WriteLine($"User Found: {currentUser.FirstName} {currentUser.LastName}");
-                    newJob.UserId = currentUser.Id;
-                }
-            }
-        }
-    }
 
     private async Task HandleSubmit()
     {
-        if (newJob.JobId == 0)
+        var result = await _JobService.EditJobAsync(newJob);
+        if (result)
         {
-            // Save as new job
-            await JobService.SaveJobAsync(newJob);
-            isJobCreated = true;
-            ResetForm(); // Clears the form fields
+            Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
         }
-        else
-        {
-            // Update existing job
-            await JobService.EditJobAsync(newJob);
-        }
-
 
     }
 
-
-    private void ResetForm()
+    private async Task DeleteJobAsync()
     {
-        newJob = new Job();
+        var result = await _JobService.DeleteJobAsync(newJob.JobId);
+        if(result)
+        {
+            Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+        }
     }
+
+
+
 
     private string GetFormattedDate(DateOnly? postedDate)
     {
@@ -136,6 +99,6 @@
         return dateTime.ToString("MMM d");
     }
 
-    
+
 }
 
