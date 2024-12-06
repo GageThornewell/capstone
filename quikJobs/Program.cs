@@ -38,12 +38,12 @@ builder.Services.AddAuthentication(options =>
     .AddIdentityCookies();
 
 
-var connectionString = builder.Configuration.GetConnectionString("KwicJobsConnectionString") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("AzureConnectionString") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 // Register KwicJobsContext
-var kwicJobsConnectionString = builder.Configuration.GetConnectionString("KwicJobsConnectionString")
+var kwicJobsConnectionString = builder.Configuration.GetConnectionString("AzureConnectionString")
                               ?? throw new InvalidOperationException("Connection string 'KwicJobsConnectionString' not found.");
 
 builder.Services.AddDbContext<KwicJobsContext>(options =>
