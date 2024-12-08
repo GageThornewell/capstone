@@ -77,32 +77,29 @@
 
     protected override async Task OnInitializedAsync()
     {
-       
-            newJob = new Job(); // Otherwise, initialize with a new job
-            newJob.CreatedOn = DateOnly.FromDateTime(DateTime.Now);
-            newJob.Views = 0;
-            newJob.Url = "images/software_developer.jfif"; 
-        
+        newJob = new Job
+            {
+                CreatedOn = DateOnly.FromDateTime(DateTime.Now),
+                Views = 0,
+                Url = "images/software_developer.jfif"
+            };
 
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
         if (user.Identity?.IsAuthenticated ?? false)
         {
+            // Fetch the user ID from the claims
             var userId = user.FindFirst(c => c.Type == "sub" || c.Type.Contains("nameidentifier"))?.Value;
 
             if (!string.IsNullOrEmpty(userId))
             {
-                currentUser = await UserManager.FindByIdAsync(userId);
-
-                if (currentUser != null)
-                {
-                    Console.WriteLine($"User Found: {currentUser.FirstName} {currentUser.LastName}");
-                    newJob.UserId = currentUser.Id;
-                }
+                Console.WriteLine($"User ID from Claims: {userId}");
+                newJob.UserId = userId; // Assign the user ID directly to the job
             }
         }
     }
+
 
     private async Task HandleSubmit()
     {
