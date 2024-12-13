@@ -1,21 +1,23 @@
 ﻿@using quikJobs.Data
 @using Microsoft.AspNetCore.Identity
 @using Services
+@using System.IO
 
 @inject NavigationManager Navigation
 @inject JobService JobService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
+@inject IWebHostEnvironment Env
 
 @rendermode InteractiveServer
 
-<!-- Success Alert -->
 @if (isJobCreated)
 {
     <div class="alert alert-success mt-3">
         Job created successfully!
     </div>
 }
+
 <EditForm Model="@newJob" OnValidSubmit="HandleSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
@@ -26,11 +28,17 @@
             <label for="name">Job Name</label>
             <InputText id="name" @bind-Value="newJob.Name" class="form-control mb-1" placeholder="Please type the job name" />
 
-            <!-- Input for Job URL -->
-            <label for="url">Select an Image</label>
-            <InputText id="url" @bind-Value="newJob.Url" class="form-control mb-3" placeholder="Please enter an image URL" />
+            <!-- Dropdown for selecting an image -->
+            <label for="image-dropdown">Select an Image</label>
+            <InputSelect id="image-dropdown" @bind-Value="newJob.Url" class="form-control mb-3">
+                <option value="">-- Select an image --</option>
+                @foreach (var image in imageFiles)
+                {
+                    <option value="@image">@Path.GetFileName(image)</option>
+                }
+            </InputSelect>
 
-            <!-- Display image based on current URL -->
+            <!-- Display image based on selected URL -->
             <div>
                 <img src="@newJob.Url" alt="Job Image" class="job-card-img" />
             </div>
@@ -58,22 +66,18 @@
             <InputNumber id="pay" @bind-Value="newJob.Pay" class="form-control" placeholder="Enter the pay for the job" />
         </div>
 
-        
-            <div class="d-flex gap-3 mt-3">
-                <!-- Submit will call handle submit-->
-                <button type="submit" class="save-job-btn">Save Job</button>
-                <button type="button" class="save-job-btn" @onclick="ResetForm">Reset</button>
-            </div>
-        
-        
+        <div class="d-flex gap-3 mt-3">
+            <button type="submit" class="save-job-btn">Save Job</button>
+            <button type="button" class="save-job-btn" @onclick="ResetForm">Reset</button>
+        </div>
     </div>
 </EditForm>
 
 @code {
     private Job newJob;
-
     private ApplicationUser? currentUser;
-    private bool isJobCreated = false; // Flag to track job creation success
+    private bool isJobCreated = false;
+    private List<string> imageFiles = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -84,41 +88,54 @@
                 Url = "images/software_developer.jfif"
             };
 
+        await LoadImageFiles();
+
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
         if (user.Identity?.IsAuthenticated ?? false)
         {
-            // Fetch the user ID from the claims
             var userId = user.FindFirst(c => c.Type == "sub" || c.Type.Contains("nameidentifier"))?.Value;
-
             if (!string.IsNullOrEmpty(userId))
             {
                 Console.WriteLine($"User ID from Claims: {userId}");
-                newJob.UserId = userId; // Assign the user ID directly to the job
+                newJob.UserId = userId;
             }
         }
     }
 
+    private async Task LoadImageFiles()
+    {
+        // Get the path to the images folder
+        var imagesFolderPath = Path.Combine(Env.WebRootPath, "images");
+
+        // Check if the folder exists and fetch file paths
+        if (Directory.Exists(imagesFolderPath))
+        {
+            imageFiles = Directory.GetFiles(imagesFolderPath, "*.*").Select(file =>
+                $"/images/{Path.GetFileName(file)}").ToList();
+        }
+        else
+        {
+            Console.WriteLine("Images folder not found!");
+        }
+
+        await Task.CompletedTask;
+    }
 
     private async Task HandleSubmit()
     {
         if (newJob.JobId == 0)
         {
-            // Save as new job
             await JobService.SaveJobAsync(newJob);
             isJobCreated = true;
-            ResetForm(); // Clears the form fields
+            ResetForm();
         }
         else
         {
-            // Update existing job
             await JobService.EditJobAsync(newJob);
         }
-
-
     }
-
 
     private void ResetForm()
     {
@@ -128,11 +145,7 @@
     private string GetFormattedDate(DateOnly? postedDate)
     {
         if (postedDate == null) return "Unknown Date";
-
         var dateTime = postedDate.Value.ToDateTime(new TimeOnly(0, 0));
         return dateTime.ToString("MMM d");
     }
-
-    
 }
-
